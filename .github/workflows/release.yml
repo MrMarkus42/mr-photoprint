@@ -67,7 +67,7 @@ jobs:
           Pop-Location
 
       - name: Build attestation
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/MrPhotoPrint-Setup-${{ steps.ver.outputs.version }}.exe

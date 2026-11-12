@@ -19,7 +19,7 @@ if ($LASTEXITCODE -ne 0) { throw 'build failed' }
 if (Get-Command cargo-about -ErrorAction SilentlyContinue) {
     cargo about generate --locked -o dist\THIRD_PARTY_LICENSES.html about.hbs
     if ($LASTEXITCODE -ne 0) { throw 'cargo about failed' }
-} else { Write-Warning 'cargo-about not installed – no licence list (cargo install cargo-about --locked)' }
+} else { Write-Warning 'cargo-about not installed - no licence list (cargo install cargo-about --locked)' }
 
 $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup not found (winget install JRSoftware.InnoSetup)' }

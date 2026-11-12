@@ -44,10 +44,14 @@ Every release has `SHA256SUMS.txt`, a `.minisig` signature per file and a build 
 Get-FileHash .\MrPhotoPrint-Setup-1.0.0.exe -Algorithm SHA256
 
 # signature / Signatur (winget install jedisct1.minisign)
-minisign -V -P <public key from keys/update-key.pub> -m .\MrPhotoPrint-Setup-1.0.0.exe
+minisign -V -P RWTBro1YLFoI+4CDiri+hGwNpoOAGVv3ipvwz6wjyQDg8tQSwwUAG3mi -m .\MrPhotoPrint-Setup-1.0.0.exe
 
 # build provenance (winget install GitHub.cli)
 gh attestation verify .\MrPhotoPrint-Setup-1.0.0.exe --repo MrMarkus42/mr-photoprint
 ```
 
-The public key is the second line of [`keys/update-key.pub`](keys/update-key.pub).
+Release signing key (minisign) – also in [`keys/update-key.pub`](keys/update-key.pub):
+
+```
+RWTBro1YLFoI+4CDiri+hGwNpoOAGVv3ipvwz6wjyQDg8tQSwwUAG3mi
+```

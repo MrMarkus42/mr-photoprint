@@ -266,3 +266,8 @@ fn live_real_minisign_signature() {
     assert!(pk.verify(&bad, &s, false).is_err(), "one changed bit is caught");
     println!("{} ({} bytes) verified: {}", zip.name, data.len(), s.trusted_comment());
 }
+
+#[test]
+fn release_key_is_set_up() {
+    assert!(key_configured(), "keys/update-key.pub must hold the real release key");
+}

@@ -5,11 +5,11 @@
 .DESCRIPTION
   1. Downloads installer, portable ZIP and SHA256SUMS.txt of the draft release v<Version>.
   2. Checks the checksums and GitHub's build attestation (the files were built by this
-     repository's release workflow from the tagged commit – not uploaded by someone else).
+     repository's release workflow from the tagged commit - not uploaded by someone else).
   3. Signs both files with the secret key on THIS PC (minisign asks for the password). The
      trusted comment names file kind and version, so a signature can't be reused for another file.
   4. Checks the signatures with keys\update-key.pub (the key compiled into the program).
-  5. Uploads the .minisig files and – after asking – publishes the release.
+  5. Uploads the .minisig files and - after asking - publishes the release.
 
   Needs: gh (logged in), minisign.   Usage:  .\tools\sign-release.ps1 1.1.0
 #>
@@ -35,9 +35,9 @@ New-Item -ItemType Directory $work | Out-Null
 Write-Host "Tag $tag points to:" -ForegroundColor Cyan
 gh api "repos/$repo/commits/$tag" --jq '.sha + "  " + (.commit.message | split("\n")[0])'
 gh release download $tag --repo $repo --dir $work --pattern $setup --pattern $zip --pattern 'SHA256SUMS.txt'
-if ($LASTEXITCODE -ne 0) { throw 'download failed – does the draft release exist?' }
+if ($LASTEXITCODE -ne 0) { throw 'download failed - does the draft release exist?' }
 
-Write-Host 'Checking checksums …' -ForegroundColor Cyan
+Write-Host 'Checking checksums ...' -ForegroundColor Cyan
 foreach ($line in Get-Content (Join-Path $work 'SHA256SUMS.txt')) {
     $hash, $name = $line -split '\s+\*?', 2
     if (-not $name) { continue }
@@ -46,20 +46,20 @@ foreach ($line in Get-Content (Join-Path $work 'SHA256SUMS.txt')) {
     Write-Host "  ok  $name"
 }
 
-Write-Host 'Checking build attestation …' -ForegroundColor Cyan
+Write-Host 'Checking build attestation ...' -ForegroundColor Cyan
 foreach ($f in $setup, $zip) {
     gh attestation verify (Join-Path $work $f) --repo $repo
-    if ($LASTEXITCODE -ne 0) { throw "no valid build attestation for $f – do NOT sign it" }
+    if ($LASTEXITCODE -ne 0) { throw "no valid build attestation for $f - do NOT sign it" }
 }
 
-Write-Host 'Signing (minisign asks for your key password) …' -ForegroundColor Cyan
+Write-Host 'Signing (minisign asks for your key password) ...' -ForegroundColor Cyan
 minisign -S -s $sec -m (Join-Path $work $setup) -t "mr-photoprint-setup $Version"
 if ($LASTEXITCODE -ne 0) { throw 'signing failed' }
 minisign -S -s $sec -m (Join-Path $work $zip) -t "mr-photoprint-portable $Version"
 if ($LASTEXITCODE -ne 0) { throw 'signing failed' }
 foreach ($f in $setup, $zip) {
     minisign -V -p $pub -m (Join-Path $work $f)
-    if ($LASTEXITCODE -ne 0) { throw "signature check failed for $f – is keys\update-key.pub the matching public key?" }
+    if ($LASTEXITCODE -ne 0) { throw "signature check failed for $f - is keys\update-key.pub the matching public key?" }
 }
 
 gh release upload $tag --repo $repo --clobber (Join-Path $work "$setup.minisig") (Join-Path $work "$zip.minisig")

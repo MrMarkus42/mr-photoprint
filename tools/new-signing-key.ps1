@@ -20,7 +20,7 @@ $secDir = Join-Path $env:USERPROFILE '.minisign'
 $sec = Join-Path $secDir 'mr-photoprint.key'
 
 if (-not (Get-Command minisign -ErrorAction SilentlyContinue)) { throw 'minisign not found. Install it: winget install jedisct1.minisign' }
-if (Test-Path $sec) { throw "A secret key already exists: $sec  (delete it only if you really want a new key – installed copies would no longer accept updates)" }
+if (Test-Path $sec) { throw "A secret key already exists: $sec  (delete it only if you really want a new key - installed copies would no longer accept updates)" }
 if ((Get-Content $pub -Raw) -notmatch 'NOT-CONFIGURED') {
     $a = Read-Host 'keys\update-key.pub already holds a real key. Replace it? Installed copies will then reject updates! (yes/no)'
     if ($a -ne 'yes') { exit 1 }

@@ -1,0 +1,49 @@
+name: Fehler melden / Bug report
+description: Etwas funktioniert nicht wie erwartet. / Something doesn't work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fürs Melden! Bitte keine privaten Fotos oder persönlichen Daten anhängen.
+        Thanks for reporting! Please don't attach private photos or personal data.
+        **Sicherheitslücken bitte privat melden / report security issues privately:** see SECURITY.md
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Einstellungen → Über / Settings → About
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation
+      options:
+        - Installer, nur für mich / installer, just for me
+        - Installer, für alle Benutzer / installer, all users
+        - Portable ZIP
+  - type: input
+    id: windows
+    attributes:
+      label: Windows
+      placeholder: "Windows 11 24H2"
+  - type: input
+    id: printer
+    attributes:
+      label: Drucker / Printer
+      placeholder: "z. B. / e.g. Epson ET-8550"
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist passiert? / What happened?
+      description: Schritte zum Nachstellen, was Sie erwartet haben, was stattdessen passiert ist. / Steps to reproduce, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Protokoll / Log
+      description: Einstellungen → Programm → „Protokoll-Ordner öffnen“, Inhalt von mrphotoprint.log (bitte vorher durchsehen). / Settings → Program → "Open log folder", contents of mrphotoprint.log (please look through it first).
+      render: text

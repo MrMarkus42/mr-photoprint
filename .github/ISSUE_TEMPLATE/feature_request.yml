@@ -1,0 +1,14 @@
+name: Wunsch / Feature request
+description: Eine Idee, die Mr. PhotoPrint besser macht. / An idea that makes Mr. PhotoPrint better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Was wünschen Sie sich? / What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Wofür brauchen Sie es? / What would you use it for?

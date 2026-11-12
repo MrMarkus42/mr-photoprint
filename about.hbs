@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mr. PhotoPrint – third-party licences</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 "Segoe UI", system-ui, sans-serif; max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.6rem; } h2 { font-size: 1.15rem; margin-top: 2.2rem; }
+  pre { white-space: pre-wrap; font-size: 12.5px; padding: 1rem; border-radius: 8px; background: rgba(127,127,127,.12); }
+  ul.used { columns: 2; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Mr. PhotoPrint – third-party licences</h1>
+<p>Mr. PhotoPrint is licensed under MIT OR Apache-2.0. It is built from the following open-source
+components, each under its own licence, reproduced below.</p>
+<h2>Overview</h2>
+<ul>
+{{#each overview}}<li><a href="#{{id}}">{{name}}</a> ({{count}})</li>
+{{/each}}
+</ul>
+{{#each licenses}}
+<h2 id="{{id}}">{{name}}</h2>
+<p>Used by:</p>
+<ul class="used">
+{{#each used_by}}<li><a href="{{#if crate.repository}}{{crate.repository}}{{else}}https://crates.io/crates/{{crate.name}}{{/if}}">{{crate.name}} {{crate.version}}</a></li>
+{{/each}}
+</ul>
+<pre>{{text}}</pre>
+{{/each}}
+</body>
+</html>

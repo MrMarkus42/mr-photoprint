@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Tests
+        run: cargo test --locked
+      - name: Release build
+        run: cargo build --release --locked
+      - name: Size of the program
+        shell: pwsh
+        run: "'{0:N1} MB' -f ((Get-Item target/release/MrPhotoPrint.exe).Length / 1MB)"

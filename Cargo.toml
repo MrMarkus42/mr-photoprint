@@ -1,0 +1,69 @@
+[package]
+name = "mr_photoprint"
+version = "1.0.0"
+edition = "2024"
+description = "Print many photos at once, each fitted perfectly to the paper (Windows)."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/MrMarkus42/mr-photoprint"
+readme = "README.md"
+keywords = ["photo", "print", "printing", "windows", "egui"]
+categories = ["multimedia::images", "gui"]
+publish = false
+
+[[bin]]
+name = "MrPhotoPrint"
+path = "src/main.rs"
+
+[dependencies]
+dirs = "7.0.0"
+# Only what a Windows desktop app needs: no Linux (wayland/x11) or web parts, and wgpu with just
+# the DirectX 12 backend (below) instead of Vulkan, OpenGL and Metal as well. Keeps the .exe small.
+eframe = { version = "0.37.0", default-features = false, features = ["accesskit", "clipboard", "default_fonts", "links", "system_fonts", "wgpu_no_default_features"] }
+egui = "0.37"
+egui_extras = { version = "0.37.0", features = ["image"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "tiff", "bmp", "webp", "gif", "ico", "tga", "pnm", "qoi"] }
+minisign-verify = "0.3.0"
+raw-window-handle = "0.6.2"
+rfd = "0.18.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[target."cfg(not(windows))".dependencies]
+wgpu = { version = "30", default-features = false, features = ["std", "wgsl", "vulkan", "metal", "gles"] }
+
+[target."cfg(windows)".dependencies]
+# DirectX 12 runs on every Windows 10/11 PC; without a suitable graphics card Windows' own WARP
+# software renderer takes over.
+wgpu = { version = "30", default-features = false, features = ["std", "wgsl", "dx12"] }
+windows ={ version = "0.62.2", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Graphics_Printing", "Win32_Storage_Xps", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_Imaging", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_Globalization", "Win32_Networking_WinHttp", "Win32_UI_Shell", "Win32_System_Registry"] }
+
+[profile.release]
+# Arithmetic overflow is caught even in the optimised build (defence in depth for hostile files).
+overflow-checks = true
+# Must stay "unwind": crashes inside image decoders are caught and turned into messages.
+panic = "unwind"
+# Smaller .exe: whole-program optimisation in one unit, no symbol table.
+lto = "fat"
+codegen-units = 1
+strip = true
+# Window, menus and graphics are optimised for size …
+opt-level = "s"
+
+# … while everything that touches photo pixels stays optimised for speed.
+[profile.release.package]
+image = { opt-level = 3 }
+
+# Even the everyday (debug) build optimises image decoding and drawing, so loading many photos and
+# resizing the window stay smooth.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[build-dependencies]
+winresource = "0.1.34"
+
+[dev-dependencies]
+blake2 = "0.10"
+ed25519-dalek = "2"

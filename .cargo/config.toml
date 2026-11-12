@@ -1,0 +1,4 @@
+# Link the C runtime into the program, so MrPhotoPrint.exe runs on any Windows PC without
+# installing anything else.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

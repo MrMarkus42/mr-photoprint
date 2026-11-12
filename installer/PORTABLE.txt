@@ -1,0 +1,16 @@
+Mr. PhotoPrint – portable version
+=================================
+
+DEUTSCH
+Doppelklick auf MrPhotoPrint.exe – es muss nichts installiert werden. Die Einstellungen liegen
+unter %APPDATA%\Mr. PhotoPrint. Die portable Version meldet neue Versionen nur; zum automatischen
+Aktualisieren bitte den Installer (MrPhotoPrint-Setup-….exe) verwenden.
+Hilfe: F1 im Programm oder https://github.com/MrMarkus42/mr-photoprint
+
+ENGLISH
+Double-click MrPhotoPrint.exe – nothing needs to be installed. Settings live in
+%APPDATA%\Mr. PhotoPrint. The portable version only announces new versions; for automatic updates
+please use the installer (MrPhotoPrint-Setup-….exe).
+Help: F1 in the program or https://github.com/MrMarkus42/mr-photoprint
+
+Licence: MIT OR Apache-2.0 (LICENSE-MIT, LICENSE-APACHE). Components: THIRD_PARTY_LICENSES.html

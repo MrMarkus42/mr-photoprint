@@ -158,13 +158,27 @@ impl FotoApp {
                 });
             });
         egui::CentralPanel::default().frame(egui::Frame::new().fill(c.bg).inner_margin(egui::Margin { left: 20, right: 20, top: 18, bottom: 0 })).show(ui, |ui| {
-            ui.label(RichText::new(title).font(bold(20.0)));
+            // Program, help and about have nothing to preview: they use the whole width.
+            let with_preview = !matches!(d.tab, Tab::Program | Tab::Help | Tab::About);
+            let heading = match (global, d.tab) {
+                (true, Tab::General) => t("Allgemein", "General").to_string(),
+                (true, Tab::Layout) => t("Seitenlayout", "Page layout").to_string(),
+                (true, Tab::Collage) => t("Mehrere Fotos pro Blatt", "Several photos per sheet").to_string(),
+                (true, Tab::Output) => t("Ränder und Ausgabe", "Margins and output").to_string(),
+                (_, Tab::Program) => t("Programm", "Program").to_string(),
+                (_, Tab::Help) => t("Hilfe", "Help").to_string(),
+                (_, Tab::About) => t("Über Mr. PhotoPrint", "About Mr. PhotoPrint").to_string(),
+                _ => title.to_string(),
+            };
+            ui.label(RichText::new(heading).font(bold(20.0)));
             ui.add_space(6.0);
             let body = ui.available_rect_before_wrap();
-            let left_w = (body.width() * 0.54).clamp(380.0, 540.0);
+            let left_w = if with_preview { (body.width() * 0.54).clamp(380.0, 540.0) } else { body.width().min(760.0) };
             let left = Rect::from_min_size(body.min, vec2(left_w, body.height()));
             let right = Rect::from_min_max(pos2(left.right() + 18.0, body.top()), body.max);
             ui.scope_builder(egui::UiBuilder::new().max_rect(left), |ui| {
+                // Nothing in the settings column may ever reach into the preview next to it.
+                ui.set_clip_rect(left.intersect(ui.clip_rect()));
                 egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
                     ui.set_width(left_w - 14.0);
                     match d.tab {
@@ -179,7 +193,9 @@ impl FotoApp {
                 });
             });
             ui.allocate_rect(body, Sense::hover());
-            self.draft_preview(ui, right, d);
+            if with_preview {
+                self.draft_preview(ui, right, d);
+            }
         });
     }
 
@@ -214,7 +230,7 @@ impl FotoApp {
             ]);
         });
         section(ui, t("Tastatur und Maus", "Keyboard and mouse"), |ui| {
-            egui::Grid::new("keys").num_columns(2).spacing([18.0, 6.0]).show(ui, |ui| {
+            ui.vertical(|ui| {
                 for (k, what) in [
                     ("F1", t("Diese Hilfe", "This help")),
                     (t("Strg + A", "Ctrl + A"), t("Alle Fotos auswählen", "Select all photos")),
@@ -225,9 +241,10 @@ impl FotoApp {
                     (t("Rechtsklick auf ein Foto", "Right-click a photo"), t("Drehen, verschieben, Ordner öffnen …", "Turn, move, open folder …")),
                     (t("Klick auf den Kreis", "Click the circle"), t("Foto zum Drucken an- oder abwählen", "Include or exclude a photo")),
                 ] {
-                    ui.label(RichText::new(k).font(bold(13.5)));
-                    ui.label(RichText::new(what).color(c.dim));
-                    ui.end_row();
+                    ui.horizontal_wrapped(|ui| {
+                        ui.label(RichText::new(k).font(bold(13.5)));
+                        ui.label(RichText::new(format!("– {what}")).color(c.dim));
+                    });
                 }
             });
         });
@@ -345,50 +362,51 @@ impl FotoApp {
         let paper_name = self.printers.paper_name(&printer, d.photo.paper);
         let ph = &mut d.photo;
         section(ui, t("Papier", "Paper"), |ui| {
-            egui::Grid::new("general").num_columns(2).spacing([14.0, 10.0]).show(ui, |ui| {
+            ui.vertical(|ui| {
+                ui.spacing_mut().combo_width = ui.available_width();
                 ui.label(t("Papierformat:", "Paper size:"));
-                egui::ComboBox::from_id_salt("paper").width(270.0).selected_text(paper_name).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("paper").width(ui.available_width()).selected_text(paper_name).show_ui(ui, |ui| {
                     ui.selectable_value(&mut ph.paper, None, t("Wie beim Drucker", "As set in the printer"));
                     for pp in &caps.papers {
                         ui.selectable_value(&mut ph.paper, Some(pp.id), format!("{}  ·  {:.0} × {:.0} mm", pp.name, pp.w_mm, pp.h_mm));
                     }
                 });
-                ui.end_row();
+                ui.add_space(6.0);
                 if !caps.trays.is_empty() {
                     ui.label(t("Papierquelle:", "Paper source:"));
                     let cur = ph.tray.and_then(|t| caps.trays.iter().find(|x| x.id == t)).map(|t| t.name.clone()).unwrap_or(t("Wie beim Drucker", "As set in the printer").into());
-                    egui::ComboBox::from_id_salt("tray").width(270.0).selected_text(cur).show_ui(ui, |ui| {
+                    egui::ComboBox::from_id_salt("tray").width(ui.available_width()).selected_text(cur).show_ui(ui, |ui| {
                         ui.selectable_value(&mut ph.tray, None, t("Wie beim Drucker", "As set in the printer"));
                         for t in &caps.trays {
                             ui.selectable_value(&mut ph.tray, Some(t.id), &t.name);
                         }
                     });
-                    ui.end_row();
+                    ui.add_space(6.0);
                 }
                 if !caps.media.is_empty() {
                     ui.label(t("Papierart:", "Paper type:")).on_hover_text(media_tip());
-                    egui::ComboBox::from_id_salt("media").width(270.0).selected_text(media_name(&caps, ph.media)).show_ui(ui, |ui| {
+                    egui::ComboBox::from_id_salt("media").width(ui.available_width()).selected_text(media_name(&caps, ph.media)).show_ui(ui, |ui| {
                         ui.selectable_value(&mut ph.media, None, t("Wie beim Drucker", "As set in the printer"));
                         for m in &caps.media {
                             ui.selectable_value(&mut ph.media, Some(m.id), &m.name);
                         }
                     });
-                    ui.end_row();
+                    ui.add_space(6.0);
                 }
                 ui.label(t("Seitenausrichtung:", "Orientation:"));
-                egui::ComboBox::from_id_salt("orient").width(270.0).selected_text(ph.orientation.label()).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("orient").width(ui.available_width()).selected_text(ph.orientation.label()).show_ui(ui, |ui| {
                     for o in Orientation::ALL {
                         ui.selectable_value(&mut ph.orientation, o, o.label());
                     }
                 });
-                ui.end_row();
+                ui.add_space(6.0);
                 ui.label(t("Farbmodus:", "Colour:"));
-                egui::ComboBox::from_id_salt("color").width(270.0).selected_text(ph.color.label()).show_ui(ui, |ui| {
+                egui::ComboBox::from_id_salt("color").width(ui.available_width()).selected_text(ph.color.label()).show_ui(ui, |ui| {
                     for col in [ColorMode::AsPrinter, ColorMode::Color, ColorMode::Gray] {
                         ui.selectable_value(&mut ph.color, col, col.label());
                     }
                 });
-                ui.end_row();
+                ui.add_space(6.0);
             });
         });
         section(ui, t("Kopien", "Copies"), |ui| {
@@ -401,9 +419,9 @@ impl FotoApp {
             let export = printer == EXPORT_PRINTER;
             section(ui, if export { t("Qualität der Bilddateien", "Quality of the picture files") } else { t("Druckqualität", "Print quality") }, |ui| {
                 let j = &mut d.job;
-                ui.horizontal(|ui| {
+                ui.vertical(|ui| {
                     ui.label(t("Qualität:", "Quality:"));
-                    egui::ComboBox::from_id_salt("quality").width(250.0).selected_text(quality_label(j.quality)).show_ui(ui, |ui| {
+                    egui::ComboBox::from_id_salt("quality").width(ui.available_width()).selected_text(quality_label(j.quality)).show_ui(ui, |ui| {
                         for q in [QUALITY_AS_PRINTER, QUALITY_DRAFT, QUALITY_LOW, QUALITY_MEDIUM, QUALITY_HIGH] {
                             ui.selectable_value(&mut j.quality, q, quality_label(q));
                         }

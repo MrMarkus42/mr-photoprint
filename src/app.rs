@@ -138,6 +138,8 @@ pub struct FotoApp {
     /// Start the downloaded installer when the window closes ("install on exit").
     pub install_on_exit: bool,
     pub screenshot_mode: bool,
+    /// Warning lines under the print summary in the last frame (they need room at the bottom).
+    pub setup_warnings: usize,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -156,6 +158,8 @@ struct Stored {
 /// Screenshot mode only: light theme, and a grid of photos per sheet (columns * 10 + rows).
 pub static DEMO_LIGHT: AtomicBool = AtomicBool::new(false);
 pub static DEMO_GRID: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+/// Screenshot mode only: open the settings at this tab (1 = general … 7 = about), shown inside the main window.
+pub static DEMO_TAB: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
 pub fn settings_path() -> Option<PathBuf> {
     dirs::config_dir().map(|d| d.join("Mr. PhotoPrint").join("einstellungen.json"))
@@ -223,7 +227,7 @@ impl FotoApp {
             updates.last_check = crate::update::now_secs();
             updater.check(updates.mode != crate::update::UpdateMode::Notify);
         }
-        let app = Self {
+        let mut app = Self {
             job,
             items: Vec::new(),
             printers,
@@ -252,7 +256,14 @@ impl FotoApp {
             update_dialog: false,
             install_on_exit: false,
             screenshot_mode,
+            setup_warnings: 0,
         };
+        let tab = DEMO_TAB.load(Ordering::Relaxed);
+        if screenshot_mode && tab > 0 {
+            cc.egui_ctx.set_embed_viewports(true);
+            let tabs = [Tab::General, Tab::Layout, Tab::Collage, Tab::Output, Tab::Program, Tab::Help, Tab::About];
+            app.open_settings_at(Target::Global, tabs[(tab as usize - 1).min(6)]);
+        }
         app.save_settings();
         app
     }
@@ -511,6 +522,11 @@ impl eframe::App for FotoApp {
     fn ui(&mut self, ui: &mut Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.frames += 1;
+        // egui measures some sizes in the first frames only; draw them again so everything is in
+        // place right after the start, not only after the window is resized.
+        if self.frames < 4 {
+            ctx.request_repaint();
+        }
         self.auto_zoom(&ctx);
         self.poll(&ctx);
         self.screenshot(&ctx);
@@ -1234,11 +1250,13 @@ impl FotoApp {
         widgets::card().show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.set_min_height(ui.available_height());
-            // The summary and the print button always stay visible at the bottom; on short windows
-            // the controls scroll and the sheet preview steps aside.
+            // Fixed split, worked out before anything is drawn (so the very first frame is right):
+            // summary + print button at the bottom, the sheet preview always gets its share, and the
+            // controls scroll when the window is short.
             let total_h = ui.available_height();
-            let bottom_h = 150.0;
-            let controls_max = if total_h < 760.0 { (total_h - 124.0).max(120.0) } else { total_h };
+            let bottom_h = 112.0 + 22.0 * self.setup_warnings as f32;
+            let preview_min = (total_h * 0.32).clamp(140.0, 280.0);
+            let controls_max = (total_h - bottom_h - preview_min - 18.0).max(96.0);
             egui::ScrollArea::vertical().id_salt("setup_controls").max_height(controls_max).auto_shrink([false, true]).show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label(RichText::new(t("Druck-Setup", "Print setup")).font(bold(18.0)).color(c.text));
@@ -1412,10 +1430,10 @@ impl FotoApp {
             });
             ui.add_space(8.0);
 
-            // preview (only when there is room for it)
+            // preview: always shown, it takes what the controls leave
             let avail = ui.available_rect_before_wrap();
-            let show_preview = avail.height() - bottom_h >= 130.0;
-            let prev = Rect::from_min_size(avail.min, vec2(avail.width(), if show_preview { avail.height() - bottom_h } else { 0.0 }));
+            let show_preview = true;
+            let prev = Rect::from_min_size(avail.min, vec2(avail.width(), (avail.height() - bottom_h).max(96.0)));
             if show_preview {
                 ui.painter().rect_filled(prev, CornerRadius::same(12), c.stage);
             }
@@ -1434,6 +1452,16 @@ impl FotoApp {
                 }
             }
             let soft = self.sharpness.values().filter(|d| **d < layout::LOW_DPI).count();
+            // Warnings below the summary need room; when their number changes, lay out again.
+            let refused = sheets
+                .get(self.sheet_idx.min(sheets.len().saturating_sub(1)))
+                .filter(|_| self.job.printer != EXPORT_PRINTER)
+                .and_then(|s| layout::borderless_refused(&s.page, &self.job));
+            let warnings = usize::from(soft > 0) + usize::from(refused.is_some());
+            if warnings != self.setup_warnings {
+                self.setup_warnings = warnings;
+                ctx.request_repaint();
+            }
             if let Some(f) = self.focus_item.take() {
                 if let Some(k) = sheets.iter().position(|s| s.cells.iter().any(|cl| cl.item == f)) {
                     self.sheet_idx = k;

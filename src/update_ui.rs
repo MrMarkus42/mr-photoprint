@@ -248,21 +248,21 @@ impl FotoApp {
     fn update_controls(&mut self, ui: &mut Ui) {
         let c = p();
         let mut changed = false;
-        egui::Grid::new("updates").num_columns(2).spacing([14.0, 10.0]).show(ui, |ui| {
+        ui.vertical(|ui| {
             ui.label(t("Nach Updates suchen:", "Check for updates:"));
-            egui::ComboBox::from_id_salt("upd_freq").width(260.0).selected_text(self.updates.check.label()).show_ui(ui, |ui| {
+            egui::ComboBox::from_id_salt("upd_freq").width(ui.available_width()).selected_text(self.updates.check.label()).show_ui(ui, |ui| {
                 for f in CheckFreq::ALL {
                     changed |= ui.selectable_value(&mut self.updates.check, f, f.label()).changed();
                 }
             });
-            ui.end_row();
+            ui.add_space(6.0);
             ui.label(t("Wenn eine neue Version da ist:", "When a new version is out:"));
-            egui::ComboBox::from_id_salt("upd_mode").width(260.0).selected_text(self.updates.mode.label()).show_ui(ui, |ui| {
+            egui::ComboBox::from_id_salt("upd_mode").width(ui.available_width()).selected_text(self.updates.mode.label()).show_ui(ui, |ui| {
                 for m in UpdateMode::ALL {
                     changed |= ui.selectable_value(&mut self.updates.mode, m, m.label()).changed();
                 }
             });
-            ui.end_row();
+            ui.add_space(6.0);
         });
         if changed {
             self.updates.asked = true;

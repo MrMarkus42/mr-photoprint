@@ -34,6 +34,18 @@ fn main() -> eframe::Result<()> {
                 Some("en") => i18n::force(i18n::Lang::En),
                 _ => {}
             }
+        } else if a == "--settings" {
+            let tab = match args.next().as_deref() {
+                Some("general") => 1,
+                Some("layout") => 2,
+                Some("collage") => 3,
+                Some("output") => 4,
+                Some("program") => 5,
+                Some("help") => 6,
+                Some("about") => 7,
+                _ => 0,
+            };
+            app::DEMO_TAB.store(tab, std::sync::atomic::Ordering::Relaxed);
         } else if a == "--theme" {
             app::DEMO_LIGHT.store(args.next().as_deref() == Some("light"), std::sync::atomic::Ordering::Relaxed);
         } else if a == "--grid" {

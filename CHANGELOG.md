@@ -3,6 +3,22 @@
 All notable changes. Format: [Keep a Changelog](https://keepachangelog.com), versions:
 [SemVer](https://semver.org).
 
+## [1.0.1] – 2026-11-12
+
+### English
+- The sheet preview is always shown – also right after the start and on small windows (before it
+  only appeared after resizing the window). The print-setup controls scroll instead.
+- Settings: labels above full-width fields, so nothing overlaps the preview any more; Program,
+  Help and About use the whole width; the heading names the open page.
+- Update settings are always visible (greyed out in builds without an update key).
+
+### Deutsch
+- Die Blatt-Vorschau ist immer zu sehen – auch direkt nach dem Start und in kleinen Fenstern (bisher
+  erst nach einer Größenänderung des Fensters). Die Einstellungen im Druck-Setup scrollen stattdessen.
+- Einstellungen: Beschriftung über Feldern in voller Breite, nichts überlappt mehr die Vorschau;
+  Programm, Hilfe und Über nutzen die ganze Breite; die Überschrift nennt die geöffnete Seite.
+- Update-Einstellungen sind immer sichtbar (ausgegraut in Versionen ohne Update-Schlüssel).
+
 ## [1.0.0] – 2026-11-12
 
 First public release. / Erste öffentliche Version.
@@ -42,4 +58,5 @@ First public release. / Erste öffentliche Version.
 - Signierte automatische Updates von GitHub (optional, nur mit Ihrer Zustimmung); Installer für
   „nur mich“ (ohne Administratorrechte) oder „alle Benutzer“; portable ZIP-Version.
 
+[1.0.1]: https://github.com/MrMarkus42/mr-photoprint/releases/tag/v1.0.1
 [1.0.0]: https://github.com/MrMarkus42/mr-photoprint/releases/tag/v1.0.0

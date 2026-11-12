@@ -271,3 +271,23 @@ fn live_real_minisign_signature() {
 fn release_key_is_set_up() {
     assert!(key_configured(), "keys/update-key.pub must hold the real release key");
 }
+
+/// The real update path against the published release, as an older version would see it
+/// (run by hand: `cargo test live_own_release -- --ignored --nocapture`).
+#[test]
+#[ignore]
+fn live_own_release_verifies() {
+    let mut nop = |_: u64, _: u64| {};
+    let body = http::get(&format!("https://api.github.com/repos/{REPO}/releases/latest"), MAX_LIST, &mut nop).unwrap();
+    let r = parse_latest(&body, Version(0, 9, 0)).unwrap().expect("a newer signed release");
+    let sig = String::from_utf8(http::get(&r.signature_url, MAX_SIG, &mut nop).unwrap()).unwrap();
+    let data = http::get(&r.installer_url, MAX_INSTALLER, &mut nop).unwrap();
+    verify(&data, &sig, SETUP_KIND, r.version).expect("genuine release verifies with the built-in key");
+    // The same file must not pass as another version or kind.
+    assert!(verify(&data, &sig, SETUP_KIND, Version(9, 9, 9)).is_err());
+    assert!(verify(&data, &sig, "mr-photoprint-portable", r.version).is_err());
+    let mut bad = data.clone();
+    bad[1000] ^= 1;
+    assert!(verify(&bad, &sig, SETUP_KIND, r.version).is_err());
+    println!("release {} ({} bytes) verified; current build {} sees no update: {:?}", r.version, data.len(), Version::current(), parse_latest(&body, Version::current()).unwrap().map(|r| r.version));
+}

@@ -33,7 +33,7 @@ Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 New-Item -ItemType Directory $work | Out-Null
 
 Write-Host "Tag $tag points to:" -ForegroundColor Cyan
-gh api "repos/$repo/commits/$tag" --jq '.sha + "  " + (.commit.message | split("\n")[0])'
+gh api "repos/$repo/commits/$tag" --jq .sha
 gh release download $tag --repo $repo --dir $work --pattern $setup --pattern $zip --pattern 'SHA256SUMS.txt'
 if ($LASTEXITCODE -ne 0) { throw 'download failed - does the draft release exist?' }
 
